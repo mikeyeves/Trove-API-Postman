@@ -1,0 +1,1310 @@
+{
+  "info": {
+    "_postman_id": "dfc329c8-5ea2-459b-b457-21148f57df20",
+    "name": "Trove API v3 (National Library of Australia)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Trove API v3 — search and retrieve Australian newspapers (1803–1950s+, OCR full text), government gazettes, magazines, books, images, maps, diaries, people/organisations and lists from the National Library of Australia and partners. A free API key is required (Trove account → Profile → API keys) and is sent as the key query parameter. Quota: 200 calls/minute.\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide · Interactive console: https://api.trove.nla.gov.au/"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "key"
+      },
+      {
+        "key": "value",
+        "value": "{{trove_key}}"
+      },
+      {
+        "key": "in",
+        "value": "query"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if(pm.response.code===401||pm.response.code===403) console.warn('Trove: set your API key in the collection variable trove_key.');",
+          "if(pm.response.code===429) console.warn('Trove quota: 200 calls/minute.');"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "★ Search",
+      "id": "63bc49a1-d8f7-410c-a2e1-c25c76c9e1f1",
+      "item": [
+        {
+          "name": "Search (all parameters)",
+          "id": "8f255149-e01e-4e4c-9e66-65f5bb0a3623",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q={{query}}&encoding=json&n=20",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": "all | newspaper | magazine | image | research | book | diary | music | people | list (repeatable). Required."
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}",
+                  "disabled": false,
+                  "description": "Search query; supports indexes (fulltext:, title:, creator:, date:[1900 TO 1910], etc.)"
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "20",
+                  "disabled": false,
+                  "description": "results per category, max 100"
+                },
+                {
+                  "key": "s",
+                  "value": "*",
+                  "disabled": true,
+                  "description": "cursor: * then nextStart from previous response (URL-encode)"
+                },
+                {
+                  "key": "sortby",
+                  "value": "",
+                  "disabled": true,
+                  "description": "relevance | datedesc | dateasc"
+                },
+                {
+                  "key": "reclevel",
+                  "value": "brief",
+                  "disabled": true,
+                  "description": "brief | full"
+                },
+                {
+                  "key": "include",
+                  "value": "",
+                  "disabled": true,
+                  "description": "tags, comments, lists, holdings, links, subscribinglibs, workversions, articletext (comma-separated)"
+                },
+                {
+                  "key": "facet",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. decade, year, state, title, category, illustrated, format, language"
+                },
+                {
+                  "key": "l-decade",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. 190 = 1900–1909"
+                },
+                {
+                  "key": "l-year",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. 1905 (needs l-decade for newspapers)"
+                },
+                {
+                  "key": "l-state",
+                  "value": "",
+                  "disabled": true,
+                  "description": "newspaper state, e.g. New South Wales, Victoria, Queensland, Western Australia"
+                },
+                {
+                  "key": "l-title",
+                  "value": "",
+                  "disabled": true,
+                  "description": "newspaper title id"
+                },
+                {
+                  "key": "l-category",
+                  "value": "",
+                  "disabled": true,
+                  "description": "newspaper article category, e.g. Article, Advertising, Family Notices"
+                },
+                {
+                  "key": "l-illustrated",
+                  "value": "",
+                  "disabled": true,
+                  "description": "true/false"
+                },
+                {
+                  "key": "l-format",
+                  "value": "",
+                  "disabled": true,
+                  "description": "non-newspaper format, e.g. Book, Photograph, Map"
+                },
+                {
+                  "key": "bulkHarvest",
+                  "value": "",
+                  "disabled": true,
+                  "description": "true = stable identifier sort for harvesting"
+                }
+              ]
+            },
+            "description": "Search one or more Trove categories.\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "★ Newspapers: Bukovsky",
+          "id": "78e7018a-e984-4b73-94c0-deac921a21dc",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q=Bukovsky OR Bukovszky&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "Bukovsky OR Bukovszky",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "50",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Australian & NZ-interest newspapers 1803–1954+ (OCR full text).\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "★ Newspapers: Barna, 1900–1930",
+          "id": "0f81c213-1256-426a-85cc-58e6b0102822",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q=Barna date:[1900 TO 1930]&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "Barna date:[1900 TO 1930]",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "50",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "★ Family Notices only (births, deaths, marriages)",
+          "id": "d4488efd-738b-4078-82c3-8c09f9c97397",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q={{query}}&l-category=Family Notices&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "l-category",
+                  "value": "Family Notices",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "50",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "BDM notices are one of Trove’s richest genealogy sources.\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "★ Shipping: Barbarossa 1905",
+          "id": "36d558f4-07b6-4e40-bf0d-49ecbbf3e4c1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q=Barbarossa&l-decade=190&l-year=1905&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "Barbarossa",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "l-decade",
+                  "value": "190",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "l-year",
+                  "value": "1905",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "50",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Facet counts (decade/state/title)",
+          "id": "6327690c-7760-48bf-a5ea-8e1491ad8087",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q={{query}}&encoding=json&n=0&facet=decade,state,title,category",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "0",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "facet",
+                  "value": "decade,state,title,category",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Where and when does a name appear?\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "People & organisations",
+          "id": "2274d18f-aa56-4092-b15a-1b0739d91ae5",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=people&q={{query}}&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "people",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "50",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Trove people/organisation authority records.\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Books, images, research, diaries, music",
+          "id": "ba61b6f2-f82b-4935-a86c-947097333d52",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=book&category=image&category=research&category=diary&q={{query}}&encoding=json&n=20",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "book",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "category",
+                  "value": "image",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "category",
+                  "value": "research",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "category",
+                  "value": "diary",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "n",
+                  "value": "20",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Multiple categories in one call.\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gazettes (government gazettes)",
+          "id": "da1575e9-1ba5-43a7-a77b-6154a408a7bd",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/result?category=newspaper&q={{query}}&l-artType=Gazette&encoding=json&n=50",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "result"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "newspaper"
+                },
+                {
+                  "key": "q",
+                  "value": "{{query}}"
+                },
+                {
+                  "key": "l-artType",
+                  "value": "Gazette"
+                },
+                {
+                  "key": "encoding",
+                  "value": "json"
+                },
+                {
+                  "key": "n",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Government gazettes: newspaper category limited with l-artType=Gazette (use l-artType=Newspaper for newspapers only)."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let j={};try{j=pm.response.json();}catch(e){}",
+                  "const cats=j.category||[];const rows=[];let total=0;",
+                  "cats.forEach(c=>{const r=c.records||{};total+=Number(r.total||0);(r.article||[]).forEach(a=>rows.push([c.code,`<a href=\"${a.troveUrl||''}\">${(a.heading||'').slice(0,120)}</a>`,a.date||'',(a.title&&a.title.title)||'',a.page||'',(a.snippet||'').replace(/<[^>]+>/g,'').slice(0,160)]));(r.work||[]).forEach(w=>rows.push([c.code,`<a href=\"${w.troveUrl||''}\">${(w.title||'').slice(0,120)}</a>`,w.issued||'',[].concat(w.contributor||[]).join('; ').slice(0,80),'',(w.type||[]).join?w.type.join(', '):'']));(r.people||[]).forEach(p=>rows.push([c.code,`<a href=\"${p.troveUrl||''}\">${p.primaryName||''}</a>`,'','','',(p.occupation||[]).join?p.occupation.join(', '):'']));});",
+                  "const next=(cats[0]&&cats[0].records&&cats[0].records.nextStart)||'';",
+                  "pm.visualizer.set(`<style>table{border-collapse:collapse;font:13px sans-serif}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}th{background:#eee}</style><p>{{total}} total{{#if next}} · next page: s={{next}}{{/if}}</p><table><tr><th>Cat</th><th>Heading / title</th><th>Date</th><th>Newspaper / creator</th><th>Page</th><th>Snippet / type</th></tr>{{#each rows}}<tr>{{#each this}}<td>{{{this}}}</td>{{/each}}</tr>{{/each}}</table>`,{rows,total,next});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Get records",
+      "id": "a11b368c-910a-4bf4-9c13-a88419704631",
+      "item": [
+        {
+          "name": "Newspaper article (with full text)",
+          "id": "55d95d8c-9b01-43eb-aedc-758f64308959",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/newspaper/{{article_id}}?encoding=json&reclevel=full&include=articletext",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "newspaper",
+                "{{article_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "include",
+                  "value": "articletext",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "article_id from search results (e.g. 18342701).\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "Gazette article",
+          "id": "a592ae57-e56a-4388-8852-589173537f63",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/gazette/{{article_id}}?encoding=json&reclevel=full",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "gazette",
+                "{{article_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "include",
+                  "value": "articletext",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "Work (book, image, map, etc.)",
+          "id": "cd374b59-93fe-40ac-9560-358345476a15",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/work/{{work_id}}?encoding=json&reclevel=full",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "work",
+                "{{work_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "include",
+                  "value": "holdings,links,workversions",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "e.g. 38392547\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "People / organisation record",
+          "id": "eb2a72fc-d079-41f1-b250-edb4da604991",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/people/{{people_id}}?encoding=json&reclevel=full",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "people",
+                "{{people_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "e.g. 708108\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "List (user-curated)",
+          "id": "ac0cbdc6-c28b-4d4f-801c-340ddd53e23c",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/list/{{list_id}}?encoding=json&reclevel=full",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "list",
+                "{{list_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Titles & contributors",
+      "id": "8df570d4-f403-44b0-9231-55e46f1e2d07",
+      "item": [
+        {
+          "name": "Newspaper titles",
+          "id": "5565abc7-e205-46b1-bc85-6b0e8b8db4d9",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/newspaper/titles?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "newspaper",
+                "titles"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "state",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. nsw, vic, qld, sa, wa, tas, nt, act, national, international"
+                }
+              ]
+            },
+            "description": "All newspaper titles (ids for l-title).\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "One newspaper title (+ issue years)",
+          "id": "ec7c7b0a-cd84-4d98-83fe-391bfc487671",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/newspaper/title/{{title_id}}?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "newspaper",
+                "title",
+                "{{title_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "include",
+                  "value": "years",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "e.g. 35 = Sydney Morning Herald\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "Gazette titles",
+          "id": "271e7111-d445-4533-ba99-5d26ace1e4c4",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/gazette/titles?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "gazette",
+                "titles"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "One gazette title",
+          "id": "43ebcb27-5092-42da-9ff3-b067f534376f",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/gazette/title/{{title_id}}?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "gazette",
+                "title",
+                "{{title_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "Magazine titles",
+          "id": "3fb5920f-4fee-43dd-a4a8-4fb25bb22c54",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/magazine/titles?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "magazine",
+                "titles"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "place",
+                  "value": "",
+                  "disabled": true,
+                  "description": "e.g. nsw"
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "One magazine title",
+          "id": "30c1da17-df42-4caa-8f53-e0081a5466a1",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/magazine/title/{{magazine_id}}?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "magazine",
+                "title",
+                "{{magazine_id}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "Contributors (libraries, archives)",
+          "id": "008285a4-646c-45f2-9909-285696ada201",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/contributor?encoding=json",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "contributor"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        },
+        {
+          "name": "One contributor",
+          "id": "48e5bacf-dcf4-4879-9df6-084bfaf10680",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{trove_api}}/contributor/{{nuc}}?encoding=json&reclevel=full",
+              "host": [
+                "{{trove_api}}"
+              ],
+              "path": [
+                "contributor",
+                "{{nuc}}"
+              ],
+              "query": [
+                {
+                  "key": "encoding",
+                  "value": "json",
+                  "disabled": false,
+                  "description": ""
+                },
+                {
+                  "key": "reclevel",
+                  "value": "full",
+                  "disabled": false,
+                  "description": ""
+                }
+              ]
+            },
+            "description": "e.g. AMG\n\nDocs: https://trove.nla.gov.au/about/create-something/using-api/v3/api-technical-guide"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "trove_api",
+      "value": "https://api.trove.nla.gov.au/v3",
+      "type": "string"
+    },
+    {
+      "key": "trove_key",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "query",
+      "value": "Bukovsky",
+      "type": "string"
+    },
+    {
+      "key": "article_id",
+      "value": "18342701",
+      "type": "string"
+    },
+    {
+      "key": "work_id",
+      "value": "38392547",
+      "type": "string"
+    },
+    {
+      "key": "people_id",
+      "value": "708108",
+      "type": "string"
+    },
+    {
+      "key": "list_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "title_id",
+      "value": "35",
+      "type": "string"
+    },
+    {
+      "key": "magazine_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nuc",
+      "value": "AMG",
+      "type": "string"
+    }
+  ]
+}
